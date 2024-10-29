@@ -4,3 +4,6 @@
 [submodule "products-ms"]
 	path = products-ms
 	url = https://github.com/NestJS-Microservices-Personal/products.git
+[submodule "orders-db"]
+	path = orders-db
+	url = https://github.com/NestJS-Microservices-Personal/orders.git
