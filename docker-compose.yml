@@ -63,7 +63,7 @@ services:
     command: pnpm run start:dev
     environment:
       - PORT=${PAYMENTS_MS_PORT}
-      - NATS_SERVERS=nats://nats-servers:4222, nats://nats-servers:4223
+      - NATS_SERVERS=nats://nats-servers:4222
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
       - STRIPE_SUCCESS_URL=${STRIPE_SUCCESS_URL}
