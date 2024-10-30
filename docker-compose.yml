@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   nats-servers:
     image: nats:latest
@@ -57,8 +55,6 @@ services:
       - POSTGRES_PASSWORD=123456
   
   payments-ms:
-    depends_on:
-      - ordersdb
     build: ./payments-ms
     ports:
       - "3003:3003"
@@ -66,4 +62,9 @@ services:
       - ./payments-ms/src:/usr/src/app/src
     command: pnpm run start:dev
     environment:
-      - PORT=3003
+      - PORT=${PAYMENTS_MS_PORT}
+      - NATS_SERVERS=nats://nats-servers:4222, nats://nats-servers:4223
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - STRIPE_SUCCESS_URL=${STRIPE_SUCCESS_URL}
+      - STRIPE_CANCEL_URL=${STRIPE_CANCEL_URL}
