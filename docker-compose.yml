@@ -55,3 +55,15 @@ services:
       - POSTGRES_DB=ordersdb
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=123456
+  
+  payments-ms:
+    depends_on:
+      - ordersdb
+    build: ./payments-ms
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./payments-ms/src:/usr/src/app/src
+    command: pnpm run start:dev
+    environment:
+      - PORT=3003
