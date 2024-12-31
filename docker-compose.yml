@@ -1,70 +1,91 @@
+version: '3.8'
 services:
   nats-servers:
     image: nats:latest
     ports:
       - "8222:8222"
-      
+    mem_limit: 128m  # Limitar memoria para ahorrar RAM en desarrollo
+
   client-gateway:
-    build: ./client-gateway
+    build:
+      context: ./client-gateway
+      dockerfile: Dockerfile
     ports:
-      - "${CLIENT_GATEWAY_PORT}:3000"
-    volumes:
-      - ./client-gateway/src:/usr/src/app/src
+      - "${CLIENT_GATEWAY_PORT}:${CLIENT_GATEWAY_PORT}"
     command: pnpm run start:dev
+    volumes:
+      - ./client-gateway/src:/usr/src/app/src  # Montaje de código para autorecarga
     environment:
       - PORT=3000
-      - NATS_SERVERS=nats://nats-servers:4222, nats://nats-servers:4223
+      - NATS_SERVERS=${NATS_SERVERS}
+    mem_limit: 256m  # Reducir memoria en desarrollo
 
-  products-ms:
-    build: ./products-ms
+  auth-ms:
+    build:
+      context: ./auth-users-ms
+      dockerfile: Dockerfile
     ports:
-      - "3001:3001"
+      - "3004:3004"
+    command: npm run start:dev
     volumes:
-      - ./products-ms/src:/usr/src/app/src
-    command: pnpm run start:dev
+      - ./auth-users-ms/src:/usr/src/app/src
     environment:
-      - PORT=3001
-      - SERVERS_NATS=nats://nats-servers:4222, nats://nats-servers:4223
-      - DATABASE_URL=file:./dev.db
-  
-  orders-ms:
-    depends_on:
-      - orders-db
-    build: ./orders-ms
-    ports:
-      - "3002:3002"
-    volumes:
-      - ./orders-ms/src:/usr/src/app/src
-    command: pnpm run start:dev
-    environment:
-      - PORT=3002
-      - NATS_SERVERS=nats://nats-servers:4222, nats://nats-servers:4223
-      - DATABASE_URL=postgresql://postgres:123456@orders-db:5432/ordersdb?schema=public
+      - PORT=3004
+      - NATS_SERVERS=${NATS_SERVERS}
+      - DATABASE_URL=${AUTH_DB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    mem_limit: 256m  # Reducir memoria en desarrollo
 
-  orders-db:
-    container_name: orders_database
-    image: postgres:16.2
-    restart: always
-    volumes:
-      - ./orders-ms/postgres:/var/lib/postgresql/data
-    ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_DB=ordersdb
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=123456
+  # products-ms:
+  #   build: ./products-ms
+  #   ports:
+  #     - "3001:3001"
+  #   volumes:
+  #     - ./products-ms/src:/usr/src/app/src
+  #   command: pnpm run start:dev
+  #   environment:
+  #     - PORT=3001
+  #     - SERVERS_NATS=nats://nats-servers:4222, nats://nats-servers:4223
+  #     - DATABASE_URL=file:./dev.db
   
-  payments-ms:
-    build: ./payments-ms
-    ports:
-      - "3003:3003"
-    volumes:
-      - ./payments-ms/src:/usr/src/app/src
-    command: pnpm run start:dev
-    environment:
-      - PORT=${PAYMENTS_MS_PORT}
-      - NATS_SERVERS=nats://nats-servers:4222
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
-      - STRIPE_SUCCESS_URL=${STRIPE_SUCCESS_URL}
-      - STRIPE_CANCEL_URL=${STRIPE_CANCEL_URL}
+  # orders-ms:
+  #   depends_on:
+  #     - orders-db
+  #   build: ./orders-ms
+  #   ports:
+  #     - "3002:3002"
+  #   volumes:
+  #     - ./orders-ms/src:/usr/src/app/src
+  #   command: pnpm run start:dev
+  #   environment:
+  #     - PORT=3002
+  #     - NATS_SERVERS=nats://nats-servers:4222, nats://nats-servers:4223
+  #     - DATABASE_URL=postgresql://postgres:123456@orders-db:5432/ordersdb?schema=public
+
+  # orders-db:
+  #   container_name: orders_database
+  #   image: postgres:16.2
+  #   restart: always
+  #   volumes:
+  #     - ./orders-ms/postgres:/var/lib/postgresql/data
+  #   ports:
+  #     - 5432:5432
+  #   environment:
+  #     - POSTGRES_DB=ordersdb
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=123456
+  
+  # payments-ms:
+  #   build: ./payments-ms
+  #   ports:
+  #     - "3003:3003"
+  #   volumes:
+  #     - ./payments-ms/src:/usr/src/app/src
+  #   command: pnpm run start:dev
+  #   environment:
+  #     - PORT=${PAYMENTS_MS_PORT}
+  #     - NATS_SERVERS=nats://nats-servers:4222
+  #     - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+  #     - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+  #     - STRIPE_SUCCESS_URL=${STRIPE_SUCCESS_URL}
+  #     - STRIPE_CANCEL_URL=${STRIPE_CANCEL_URL}
